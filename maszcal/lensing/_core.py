@@ -36,13 +36,23 @@ class Shear:
     rho_func: object
     units: u.Quantity
     esd_func: object
+    sd_func: object
     esd_kwargs: MappingProxyType
+    sd_kwargs: MappingProxyType
 
     def excess_surface_density(self, rs, zs, mus, *rho_params):
         return self.esd_func(
             rs,
             lambda r: self.rho_func(r, zs, mus, *rho_params),
             **self.esd_kwargs,
+        ) * (u.Msun/u.Mpc**2).to(self.units)
+
+
+    def surface_density(self, rs, zs, mus, *rho_params):
+        return self.sd_func(
+            rs,
+            lambda r: self.rho_func(r, zs, mus, *rho_params),
+            **self.sd_kwargs,
         ) * (u.Msun/u.Mpc**2).to(self.units)
 
 

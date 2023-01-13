@@ -16,6 +16,8 @@ class BaryonDensity:
             units=self.units,
             esd_func=self.esd_func,
             esd_kwargs=self.esd_kwargs,
+            sd_func=self.sd_func,
+            sd_kwargs=self.sd_kwargs,
         )
 
     def _init_convergence_wrapper(self):
@@ -27,6 +29,9 @@ class BaryonDensity:
             sd_func=self.sd_func,
             sd_kwargs=self.sd_kwargs,
         )
+
+    def surface_density(self, rs, zs, mus, *rho_params):
+        return self._shear_wrapper.surface_density(rs, zs, mus, *rho_params)
 
     def excess_surface_density(self, rs, zs, mus, *rho_params):
         return self._shear_wrapper.excess_surface_density(rs, zs, mus, *rho_params)
@@ -138,6 +143,7 @@ class Gnfw(_Gnfw):
     sd_func: object = projector.SurfaceDensity.calculate
     sd_kwargs: MappingProxyType = MappingProxyType({'radial_axis_to_broadcast': 1, 'density_axis': -2})
     esd_func: object = projector.ExcessSurfaceDensity.calculate
+    sd_func: object = projector.SurfaceDensity.calculate
     esd_kwargs: MappingProxyType = MappingProxyType({'radial_axis_to_broadcast': 1, 'density_axis': -2})
     baryon_norm_radius: float = 3.3
 
@@ -197,7 +203,7 @@ class SingleMassGnfw(_SingleMassGnfw):
     sd_func: object = projector.SurfaceDensity.calculate
     sd_kwargs: MappingProxyType = MappingProxyType({'radial_axis_to_broadcast': 1, 'density_axis': -2})
     esd_func: object = projector.ExcessSurfaceDensity.calculate
-    esd_kwargs: MappingProxyType = MappingProxyType({'radial_axis_to_broadcast': 1, 'density_axis': -2})
+    esd_kwargs: MappingProxyType = MappingProxyType({'radial_axis_to_broadcast': 1, 'density_axis': -1})
     baryon_norm_radius: float = 3.3
 
 
