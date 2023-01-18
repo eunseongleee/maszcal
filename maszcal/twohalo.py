@@ -130,6 +130,19 @@ class TwoHaloShearModel(TwoHaloModel):
     def excess_surface_density(self, rs, zs, mus):
         return self.matter_density(zs)[:, None] * self._excess_surface_density(rs, zs, mus) * (u.Msun/u.Mpc**2).to(self.units)
 
+    def _surface_density_radial_shape(self, rs, zs):
+        return projector.SurfaceDensity.calculate(rs, lambda radii: self._density_shape_interpolator(radii, zs), **self.sd_kwargs)
+
+    def _surface_density(self, rs, zs, mus):
+        bias = self._bias(zs, mus)[:, None]
+        surface_density_radial_shape = self._surface_density_radial_shape(rs, zs).T
+        return bias * surface_density_radial_shape
+
+    def surface_density(self, rs, zs, mus):
+        return self.matter_density(zs)[:, None] * self._surface_density(rs, zs, mus) * (u.Msun/u.Mpc**2).to(self.units)
+
+
+
 
 class TwoHaloConvergenceModel(TwoHaloModel):
     CMB_REDSHIFT = 1100
