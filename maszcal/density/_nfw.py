@@ -241,7 +241,15 @@ class SingleMassNfwModel(NfwModel):
         numerator = self.delta_c(cons)[None, :] * self.reference_density(zs)[:, None]
         total_num_dims = rs.ndim+numerator.ndim-1
         numerator = mathutils.atleast_kd(numerator, total_num_dims, append_dims=False)
-        xs = rs[..., None]/mathutils.atleast_kd(scale_radii, total_num_dims, append_dims=False)
+        scale_radii = mathutils.atleast_kd(scale_radii, total_num_dims, append_dims=False)
+
+        # when mass and redshift input is an array
+        if np.ndim(zs) != 1:
+            scale_radii = np.swapaxes(scale_radii, 1, 3)
+            xs = rs[..., None, None]/scale_radii
+        else:
+            xs = rs[..., None]/scale_radii
+
         denominator = xs * (1+xs)**2
         return numerator/denominator
 

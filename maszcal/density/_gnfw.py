@@ -160,7 +160,9 @@ class _SingleMassGnfw(_Gnfw):
         '''
         SHAPE rs.shape, z, params
         '''
-        ys = (rs[..., None]/maszcal.mathutils.atleast_kd(self._r_delta(zs, mus), rs.ndim+1, append_dims=False)) / self.CORE_RADIUS
+
+        # when mass and redshift input is an array, denominator is needed to be transposed, but this also works for non-array case
+        ys = (rs[..., None]/maszcal.mathutils.atleast_kd(self._r_delta(zs, mus), rs.ndim+1, append_dims=False).T) / self.CORE_RADIUS
 
         alphas = maszcal.mathutils.atleast_kd(alphas, rs.ndim+1, append_dims=False)
         betas = maszcal.mathutils.atleast_kd(betas, rs.ndim+1, append_dims=False)
@@ -178,17 +180,29 @@ class _SingleMassGnfw(_Gnfw):
             self.NUM_INTEGRATION_RADII,
         )
         rs = rsflat[:, None]
-
         drs = np.gradient(rsflat)
-        top_integrand = self._rho_nfw(rs, zs, mus, cons) * rs[..., None]**2
+        top_numerator = self._rho_nfw(rs, zs, mus, cons)
+
+        # when mass and redshift input is an array
+        if np.ndim(zs) != 1:
+            top_numerator = top_numerator[:, 0, ...]
+
+        top_integrand = top_numerator * rs[..., None]**2
         bottom_integrand = self.gnfw_shape(rs, zs, mus, alphas, betas, gammas) * rs[..., None]**2
 
         return (maszcal.mathutils.trapz_(top_integrand, dx=drs, axis=0)
                 / maszcal.mathutils.trapz_(bottom_integrand, dx=drs, axis=0))
 
     def _rho_gnfw(self, rs, zs, mus, cons, alphas, betas, gammas):
+
         norm = self._gnfw_norm(zs, mus, cons, alphas, betas, gammas)[None, ...]
         profile_shape = self.gnfw_shape(rs, zs, mus, alphas, betas, gammas)
+
+        # when mass and redshift input is an array
+        if np.ndim(zs) != 1:
+            norm = norm[None, ...]
+            profile_shape = profile_shape[..., None, :]
+
         return norm * profile_shape
 
     def rho_tot(self, rs, zs, mus, cons, alphas, betas, gammas):

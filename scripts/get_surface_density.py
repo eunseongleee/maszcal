@@ -5,6 +5,8 @@ import maszcal.cosmology
 import maszcal.density
 import maszcal.twohalo
 
+import time
+
 path = '/Users/eunseonglee/advact/'
 cat = 'DR5_cluster-catalog_v1.1.fits'
 
@@ -98,14 +100,14 @@ def get_two_halo_emulator(two_halo_sd):
 
 def get_surface_density(radii, redshift, mass, a_2h, con, alpha, beta, emulator, include_baryon=True):
 
-    redshift = np.array([redshift])
-    mass = np.array([mass])
+    redshift_arr = np.array([redshift])
+    mass_arr = np.array([mass])
     mu = np.log(mass) 
     a_2h = np.array([a_2h])  
  
-    one_halo = get_one_halo_sd(radii, redshift, mass, con, alpha, beta, include_baryon=True)   
+    one_halo = get_one_halo_sd(radii, redshift_arr, mass_arr, con, alpha, beta, include_baryon=True).T
     two_halo = a_2h * emulator(radii, redshift, mu).squeeze()    
-    
+
     return np.where(one_halo > two_halo, one_halo, two_halo)
 
 
@@ -114,23 +116,32 @@ def get_sd_array():
     print("Reading in catalogue")
     
     zs, Ms = read_cat(cat, SNRcut, zmin, zmax)
-  
-    print("Setting up two halo term emulator")   
-  
+ 
+    start = time.time()
+   
     two_halo_sd = get_two_halo_sd()
     emulator = get_two_halo_emulator(two_halo_sd)
 
-    print("Getting surface density profiles")   
+    end = time.time() - start
+    print("Setting up an emulator for two halo term takes", end)
+
     
-    sd_arr = np.array(
-        [get_surface_density(radii, zs[i], Ms[i], a_2h, con, alpha, beta, emulator, include_baryon=True) 
-          for i in range(len(zs))]
-    ) 
+    start = time.time()
+
+    sd_arr = get_surface_density(radii, zs, Ms, a_2h, con, alpha, beta, emulator, include_baryon=True)
+    
+    end = time.time() - start
+    print("Getting surface density profiles for clusters takes", end)
 
     return sd_arr
+
+
 
 
 
 sigma = get_sd_array()
 
 print(np.shape(sigma))
+
+
+
